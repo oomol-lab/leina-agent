@@ -86,7 +86,7 @@ docker compose logs -f hermes
 | Office 和 PDF | `office-files`、`pdf-files` |
 | 公开内容研究 | `public-social-research` |
 
-通过这些 Skills，Hermes 可以处理 Office 和 PDF 文件、执行 OCR、研究公开社交
+通过这些 Skills，Hermes 可以处理 Office 和 PDF 文件、研究公开社交
 平台内容、调用已连接的外部服务，以及通过 OO 查找和管理其他 Skills。
 
 ## 配置与数据

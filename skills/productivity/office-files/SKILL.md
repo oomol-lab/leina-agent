@@ -29,7 +29,7 @@ libraries at runtime before trying the supported tools below.
 Use the image-provided Python environment directly:
 
 ```sh
-/opt/hermes/.venv/bin/python
+/opt/oomol-hermes-agent/document-venv/bin/python
 ```
 
 The OOMOL image installs `markitdown`, `docx`, `openpyxl`, `pptx`, and

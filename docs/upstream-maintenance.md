@@ -2,9 +2,16 @@
 
 ## Contract
 
-`upstream.lock.json` pins an immutable Hermes commit and expected project
+`upstream.lock.json` pins an immutable Hermes commit and expected release
 version. The Dockerfile duplicates those values as build defaults so normal
 `docker build` remains convenient; repository tests require them to match.
+
+Hermes 0.21.6 uses `project.version = "0.0.0"` and a canonical install stamp for
+packaged identity. The build verifies that the release tag resolves to the
+locked commit, then uses upstream `write_install_stamp` and the offline
+assembler. Never compare that placeholder package version to the release pin.
+Python and tool versions come from the pinned upstream `pm/lock.json`; use PM
+build APIs rather than invoking pip/uv against the Hermes environment.
 
 ## Update Procedure
 

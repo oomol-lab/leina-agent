@@ -2,8 +2,8 @@
   "schema_version": 1,
   "hermes": {
     "repository": "https://github.com/NousResearch/hermes-agent.git",
-    "commit": "df4b65147d7ddd74dd449f9067aabbca5aef0ec7",
-    "version": "0.20.2"
+    "commit": "818c13be1dc4fd28987e1e881a9408224afd4535",
+    "version": "0.21.6"
   },
   "oo_cli": {
     "version": "1.9.5",

@@ -3,7 +3,5 @@
 
 autonomous-ai-agents/hermes-agent
 creative/architecture-diagram
-creative/excalidraw
-productivity/nano-pdf
-productivity/ocr-and-documents
-software-development/plan
+# Removed upstream paths are not copied from an older Hermes revision.
+# Office and PDF workflows remain covered by project-owned curated Skills.

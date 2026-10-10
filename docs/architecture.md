@@ -25,14 +25,18 @@ Pinned Hermes source
 
 1. Download the immutable Hermes commit in `upstream.lock.json`.
 2. Apply `patches/0001-skill-description-opt-in.patch` with a fail-closed check.
-3. Install Hermes dependencies from its own lock file.
+3. Stage the upstream PM-locked Python/toolchain and build Hermes dependencies
+   from its own lock file through PM. Assemble CLI/gateway launchers using the
+   upstream offline assembler and record an external-update install stamp.
 4. Install and verify the architecture-specific OO CLI binary.
 5. Copy provider Plugins into Hermes's bundled Plugin categories.
 6. Assemble allowlisted upstream and project-owned Skills into one immutable
    curated directory.
 7. Export OO framework Skills into a separate immutable directory and add the
    Hermes routing-description metadata.
-8. Exercise the document runtime and statically validate Plugin and Node code.
+8. Build the document dependencies in an independent Python environment,
+   exercise the document runtime, and verify actual provider discovery and
+   Skill-description behavior offline.
 
 ## Runtime State
 
@@ -46,9 +50,18 @@ All mutable state is below `/data`:
 
 Image-owned code, Plugins, and Skills remain below `/opt` and are read-only at
 runtime. Hermes lives at `/opt/hermes`, distribution assets live at
-`/opt/oomol-hermes-agent`, and its virtual environment reuses the base image's
-Python 3.11 interpreter, which remains executable after the container switches
-to the non-root `hermes` user.
+`/opt/oomol-hermes-agent`, and its virtual environment uses PM's pinned Python
+3.14 interpreter in `/opt/tools`, with its independent manager at
+`/opt/pm-runtime` and the upstream payload manifest at `/opt/manifest.json`.
+The independent document environment
+lives at `/opt/oomol-hermes-agent/document-venv`; it does not replace dependencies
+in the Hermes lock. Both interpreters remain executable after the container
+switches to the non-root `hermes` user. The Debian base is pinned by
+multi-platform digest and SQLite 3.53.4 is built from a SHA-256-verified source.
+
+The image prepares the CLI and messaging gateway, without building the Desktop
+or Ink TUI frontends. Additional runtime dependency downloads are disabled;
+adding a backend requires preparing its dependencies during image construction.
 
 The entrypoint requires `OO_API_KEY`, `OO_LLM_BASE_URL`, `OO_LLM_MODEL`, and
 `OO_LLM_API_MODE`. It validates the API mode against a small allowlist and

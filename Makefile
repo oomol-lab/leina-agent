@@ -10,7 +10,7 @@ RUNTIME_ENV := -e OO_API_KEY -e OO_LLM_BASE_URL -e OO_LLM_MODEL -e OO_LLM_API_MO
 
 .DEFAULT_GOAL := help
 
-.PHONY: help test check build smoke volume run run-clean gateway compose-config compose-build compose-up compose-down compose-reset compose-logs compose-cli
+.PHONY: help test check build smoke integration volume run run-clean gateway compose-config compose-build compose-up compose-down compose-reset compose-logs compose-cli
 
 help:
 	@echo "OOMOL Hermes Agent development commands:"
@@ -20,6 +20,7 @@ help:
 	@echo "  make run          Start Hermes with persistent data"
 	@echo "  make run-clean    Start Hermes with fresh, disposable data"
 	@echo "  make smoke        Check Hermes inside the built image"
+	@echo "  make integration  Run offline acceptance in the built image"
 	@echo "  make gateway      Start the Hermes gateway"
 	@echo "  make compose-up   Build and start the development gateway"
 	@echo "  make compose-down Stop the development gateway"
@@ -43,6 +44,9 @@ build:
 
 smoke:
 	$(DOCKER) run --rm $(RUNTIME_ENV) "$(IMAGE)" hermes --help
+
+integration:
+	DOCKER="$(DOCKER)" sh scripts/test-image.sh "$(IMAGE)"
 
 volume:
 	@$(DOCKER) volume inspect "$(DATA_VOLUME)" >/dev/null 2>&1 || \

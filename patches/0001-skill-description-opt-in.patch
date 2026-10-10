@@ -1,15 +1,14 @@
 diff --git a/agent/skill_utils.py b/agent/skill_utils.py
-index df0f93331..73d6b11ee 100644
+index 8f8b115b..7a9829d5 100644
 --- a/agent/skill_utils.py
 +++ b/agent/skill_utils.py
-@@ -788,20 +788,42 @@ def _normalize_skill_description(frontmatter: Dict[str, Any]) -> str:
+@@ -828,15 +828,35 @@ def _normalize_skill_description(frontmatter: Dict[str, Any]) -> str:
      return str(raw_desc).strip().strip("'\"") if raw_desc else ""
  
  
 +def _skill_prompt_description_limit(frontmatter: Dict[str, Any]) -> int:
 +    """Return the description limit used by the system prompt skill index."""
 +    max_chars = SKILL_PROMPT_DESC_LIMIT
-+    # --- Start OOMOL: retain complete routing descriptions for selected Skills ---
 +    metadata = frontmatter.get("metadata")
 +    hermes_metadata = metadata.get("hermes") if isinstance(metadata, dict) else None
 +    configured_max = (
@@ -23,28 +22,21 @@ index df0f93331..73d6b11ee 100644
 +        and configured_max >= 4
 +    ):
 +        max_chars = min(configured_max, 2000)
-+    # --- End OOMOL ---
 +    return max_chars
 +
 +
  def extract_skill_description(frontmatter: Dict[str, Any]) -> str:
      """Extract a system-prompt-length description from parsed frontmatter."""
      desc = _normalize_skill_description(frontmatter)
-     if not desc:
-         return ""
--    if len(desc) > SKILL_PROMPT_DESC_LIMIT:
--        return desc[:SKILL_PROMPT_DESC_LIMIT - 3] + "..."
+-    return desc[:SKILL_PROMPT_DESC_LIMIT - 3] + "..." if len(desc) > SKILL_PROMPT_DESC_LIMIT else desc
 +    max_chars = _skill_prompt_description_limit(frontmatter)
-+    if len(desc) > max_chars:
-+        return desc[: max_chars - 3] + "..."
-     return desc
++    return desc[:max_chars - 3] + "..." if len(desc) > max_chars else desc
  
  
  def is_skill_description_truncated_for_prompt(frontmatter: Dict[str, Any]) -> bool:
      """True when the description will be truncated in the system prompt skill index."""
-     desc = _normalize_skill_description(frontmatter)
--    return len(desc) > SKILL_PROMPT_DESC_LIMIT
-+    return len(desc) > _skill_prompt_description_limit(frontmatter)
+-    return len(_normalize_skill_description(frontmatter)) > SKILL_PROMPT_DESC_LIMIT
++    return len(_normalize_skill_description(frontmatter)) > _skill_prompt_description_limit(frontmatter)
  
  
- # ── File iteration ────────────────────────────────────────────────────────
+ def iter_skill_index_files(skills_dir: Path, filename: str):
