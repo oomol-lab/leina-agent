@@ -11,8 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-
-ROOT = Path("/opt/hermes")
+ROOT = Path("/opt/oomol-hermes-agent/document-venv")
 SKILLS = Path("/opt/oomol-hermes-agent/curated-skills/productivity")
 
 
@@ -37,7 +36,7 @@ def require_commands() -> None:
     for command in ("soffice", "pandoc", "pdfinfo", "pdftoppm", "qpdf"):
         if shutil.which(command) is None:
             raise RuntimeError(f"required document command is missing: {command}")
-    venv_bin = ROOT / ".venv" / "bin"
+    venv_bin = ROOT / "bin"
     if not any((venv_bin / command).is_file() for command in ("pyhanko", "pyhanko-cli")):
         raise RuntimeError("required document command is missing: pyhanko")
 
@@ -46,8 +45,7 @@ def run(*command: str) -> None:
     result = subprocess.run(
         command,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
         timeout=120,
     )

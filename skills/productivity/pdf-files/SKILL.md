@@ -17,8 +17,9 @@ This includes Chinese requests such as `生成 PDF`, `创建 PDF 表单`, `填�
   the bundled `office-files` skill and LibreOffice `soffice --headless`.
 - For using a PDF as source material for a basic PowerPoint deck, extract the
   source content first and then use the bundled `office-files` skill.
-- For scanned or image-only PDFs where text extraction fails, use the bundled
-  `ocr-and-documents` skill before attempting structured PDF editing.
+- For scanned or image-only PDFs, use Hermes's document extraction when OCR is
+  configured. If OCR is unavailable, explain the missing capability before
+  attempting structured PDF editing.
 - Do not install PDF libraries at runtime. The image already provides the
   supported PDF stack.
 
@@ -27,7 +28,7 @@ This includes Chinese requests such as `生成 PDF`, `创建 PDF 表单`, `填�
 Use the image-provided Python environment:
 
 ```sh
-/opt/hermes/.venv/bin/python
+/opt/oomol-hermes-agent/document-venv/bin/python
 ```
 
 The image already installs:

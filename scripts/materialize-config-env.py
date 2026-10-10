@@ -8,7 +8,6 @@ import json
 import os
 from pathlib import Path
 
-
 MODEL_SETTINGS = {
     "default": ("${OO_LLM_MODEL}", "OO_LLM_MODEL"),
     "base_url": ("${OO_LLM_BASE_URL}", "OO_LLM_BASE_URL"),

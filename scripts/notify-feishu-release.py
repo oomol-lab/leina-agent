@@ -26,7 +26,7 @@ def feishu_signature(secret: str) -> tuple[str, str] | None:
     timestamp = str(int(time.time()))
     sign = base64.b64encode(
         hmac.new(
-            f"{timestamp}\n{secret}".encode("utf-8"),
+            f"{timestamp}\n{secret}".encode(),
             digestmod=hashlib.sha256,
         ).digest()
     ).decode("ascii")

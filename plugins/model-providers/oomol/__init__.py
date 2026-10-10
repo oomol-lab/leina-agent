@@ -8,7 +8,6 @@ from urllib.parse import urlsplit
 from providers import register_provider
 from providers.base import ProviderProfile
 
-
 _VALID_API_MODES = {"chat_completions", "codex_responses"}
 
 

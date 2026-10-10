@@ -71,7 +71,7 @@ config_path="${HERMES_HOME}/config.yaml"
 if [ ! -e "${config_path}" ]; then
     cp /opt/oomol-hermes-agent/config/config.seed.yaml "${config_path}"
 fi
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
     /opt/oomol-hermes-agent/scripts/materialize-config-env.py "${config_path}"
 
 if [ "$#" -eq 0 ]; then

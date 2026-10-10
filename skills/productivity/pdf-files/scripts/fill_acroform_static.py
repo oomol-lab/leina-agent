@@ -9,11 +9,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from pdf_fonts import register_embedded_cjk_font
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import ArrayObject, NameObject
 from reportlab.pdfgen import canvas
-
-from pdf_fonts import register_embedded_cjk_font
 
 
 def load_values(raw: str) -> dict[str, str]:

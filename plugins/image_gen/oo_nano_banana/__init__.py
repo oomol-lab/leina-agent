@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from agent.image_gen_provider import (
     DEFAULT_ASPECT_RATIO,
@@ -20,8 +20,7 @@ from agent.image_gen_provider import (
     save_url_image,
     success_response,
 )
-from oomol_hermes_oo import require_oo_authentication
-
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 PROVIDER_NAME = "oo_nano_banana"
 DEFAULT_SERVICE = "fusion-api"
@@ -68,14 +67,7 @@ _MODEL_ALIASES = {
 }
 
 
-def _env_bool(name: str) -> bool | None:
-    raw = os.environ.get(name)
-    if raw is None or raw == "":
-        return None
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _resolve_model(model: Optional[str]) -> str:
+def _resolve_model(model: str | None) -> str:
     raw = (
         model
         or os.environ.get("OO_NANO_BANANA_VARIANT")
@@ -104,14 +96,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         "--json",
     ]
 
-    organization = os.environ.get("OO_NANO_BANANA_ORGANIZATION")
-    personal = _env_bool("OO_NANO_BANANA_PERSONAL")
-    if organization and personal:
-        raise ValueError("OO_NANO_BANANA_ORGANIZATION and OO_NANO_BANANA_PERSONAL cannot both be set.")
-    if organization:
-        cmd.extend(["--organization", organization])
-    elif personal:
-        cmd.append("--personal")
+    cmd.extend(team_arguments("OO_NANO_BANANA", "OO_IMAGE"))
 
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=900)
@@ -139,6 +124,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
 
 def _run_oo_file_upload(path: str) -> str:
     cmd = ["oo", "file", "upload", path, "--json"]
+    cmd.extend(team_arguments("OO_NANO_BANANA", "OO_IMAGE"))
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=300)
     except FileNotFoundError as exc:
@@ -162,8 +148,7 @@ def _normalize_reference(ref: str) -> str:
     value = ref.strip()
     if value.startswith(("http://", "https://")):
         return value
-    if value.startswith("file://"):
-        value = value[7:]
+    value = value.removeprefix("file://")
     expanded = os.path.expanduser(value)
     if os.path.isfile(expanded):
         return _run_oo_file_upload(expanded)
@@ -267,7 +252,7 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
     def is_available(self) -> bool:
         return shutil.which("oo") is not None
 
-    def list_models(self) -> List[Dict[str, Any]]:
+    def list_models(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": "nano-banana-pro",
@@ -292,10 +277,10 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
             },
         ]
 
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return DEFAULT_MODEL
 
-    def get_setup_schema(self) -> Dict[str, Any]:
+    def get_setup_schema(self) -> dict[str, Any]:
         return {
             "name": "OOMOL Nano Banana",
             "badge": "oomol",
@@ -303,7 +288,7 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
             "env_vars": [],
         }
 
-    def capabilities(self) -> Dict[str, Any]:
+    def capabilities(self) -> dict[str, Any]:
         return {"modalities": ["text", "image"], "max_reference_images": 2}
 
     def generate(
@@ -311,10 +296,10 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
         prompt: str,
         aspect_ratio: str = DEFAULT_ASPECT_RATIO,
         *,
-        image_url: Optional[str] = None,
-        reference_image_urls: Optional[List[str]] = None,
+        image_url: str | None = None,
+        reference_image_urls: list[str] | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         aspect = resolve_aspect_ratio(aspect_ratio)
         model = _resolve_model(kwargs.get("model"))
         actions = _ACTION_SETS[model]
@@ -351,12 +336,12 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
         resolution_field = actions.get("resolution_field")
         if resolution_field:
             request[resolution_field] = resolution
-        if refs:
-            request[actions["image_urls_field"]] = [
-                _normalize_reference(ref) for ref in refs
-            ]
-
         try:
+            if refs:
+                request[actions["image_urls_field"]] = [
+                    _normalize_reference(ref) for ref in refs
+                ]
+
             submit_payload = _run_oo_connector(actions["submit"], request, service=service)
             session_id = _extract_session_id(submit_payload)
             result_payload = _poll_result(session_id, action=actions["result"], service=service)

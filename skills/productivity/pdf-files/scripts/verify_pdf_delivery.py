@@ -174,7 +174,13 @@ def text_visibility(
                 )
                 length_squared = sum(component * component for component in vector)
 
-                def is_ink(color: tuple[int, int, int]) -> bool:
+                def is_ink(
+                    color: tuple[int, int, int],
+                    *,
+                    background: tuple[int, int, int] = background,
+                    vector: tuple[int, int, int] = vector,
+                    length_squared: int = length_squared,
+                ) -> bool:
                     if length_squared == 0:
                         return False
                     progress = (
@@ -462,7 +468,7 @@ def outside_page_text(pdf_path: Path, tolerance: float = 1.0) -> dict[str, Any]:
 
 def run_command(command: list[str]) -> dict[str, Any]:
     completed = subprocess.run(
-        command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+        command, text=True, capture_output=True, check=False
     )
     return {
         "ok": completed.returncode == 0,

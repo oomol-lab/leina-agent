@@ -113,9 +113,45 @@ tools were intentionally not migrated.
 
 ## Next Work, In Order
 
-1. Run the first complete linux/amd64 Docker build and fix only real integration
-   failures found against the pinned source.
-2. Automate the image-level Plugin discovery check currently run manually.
+The dependency upgrade validated on 2026-10-10 uses Hermes `0.21.6` at
+`818c13be1dc4fd28987e1e881a9408224afd4535` and OO CLI `1.9.5`. It migrates the
+runtime to upstream PM's Python 3.14/tool pins, records release identity through
+an install stamp, rebases the per-Skill description patch, and removes four
+allowlisted Skill paths no longer present upstream. Project Office/PDF Skills
+use an independent document environment. Connector actions and reference
+uploads share explicit `*_TEAM` selectors; legacy organization/personal
+selectors fail with a migration message.
+
+The upgrade also includes pinned newer document packages, uv 0.13.0 and pytest
+9.1.1 for the separate Python 3.11 repository-test image, SHA-pinned GitHub Actions, native
+dual-architecture CI, and offline image acceptance through `make integration`.
+ReportLab remains at 4.4.5 pending a separate major-version evaluation.
+
+Compatibility status: 35 repository tests pass in Docker with pytest 9.1.1.
+Full linux/arm64 and linux/amd64 builds and `make integration` pass on OrbStack;
+amd64 runs under emulation on the arm64 host. Both images report Hermes 0.21.6,
+OO CLI 1.9.5, Python 3.14.7, and non-root UID 10000. PM's Python uses SQLite
+3.53.1, which passes the WAL-reset-fix floor; the Debian interpreter uses the
+separately built SQLite 3.53.4 library. The rebased patch applies cleanly and
+both OO CLI Linux artifacts match the lock digests.
+
+Acceptance covers offline startup, required inputs, stale-login removal,
+configuration preservation, both model API modes, all five OOMOL providers,
+CLI-adapter team consistency and sanitized errors, Skill limits, and generated
+Office/PDF artifacts including Chinese forms and test signatures. Hosted model
+calls and live paid Connector actions were not performed. Workflow YAML,
+full-SHA Action pins, and the two-architecture acceptance matrix were checked
+in Docker; GitHub workflows were not dispatched and no image was published.
+
+The pre-upgrade `39237f5` baseline has successful GitHub repository tests
+([CI run](https://github.com/oomol-lab/oomol-hermes-agent/actions/runs/32211377306))
+and a successful linux/amd64 image build
+([image run](https://github.com/oomol-lab/oomol-hermes-agent/actions/runs/32211377290)).
+Those results do not validate this new dependency combination.
+
+1. Verify live authenticated Connector actions and model calls in a runtime
+   environment with the user's credentials, without recording sensitive output.
+2. Exercise the new CI workflow on native amd64/arm64 runners before release.
 3. Consolidate repeated OO subprocess, upload, polling, response parsing, and
    redaction code shared by provider Plugins.
 4. Add `doctor` output for required environment, binary, model endpoint, and

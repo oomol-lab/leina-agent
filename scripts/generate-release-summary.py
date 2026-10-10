@@ -12,10 +12,8 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
-
 
 DEFAULT_BASE_URL = "https://llm.oomol.com/v1"
 DEFAULT_MODEL = "deepseek-v4-flash"

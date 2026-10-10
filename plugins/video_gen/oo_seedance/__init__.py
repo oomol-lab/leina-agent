@@ -9,8 +9,9 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+from agent.image_gen_provider import save_url_image
 from agent.video_gen_provider import (
     DEFAULT_ASPECT_RATIO,
     DEFAULT_RESOLUTION,
@@ -19,9 +20,7 @@ from agent.video_gen_provider import (
     save_url_video,
     success_response,
 )
-from agent.image_gen_provider import save_url_image
-from oomol_hermes_oo import require_oo_authentication
-
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 PROVIDER_NAME = "oo_seedance"
 DEFAULT_SERVICE = "fusion-api"
@@ -62,13 +61,6 @@ def _write_delivery_metadata(video_path: Path, metadata: dict[str, Any]) -> None
             pass
 
 
-def _env_bool(name: str) -> bool | None:
-    raw = os.environ.get(name)
-    if raw is None or raw == "":
-        return None
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _coerce_bool(value: Any, default: bool) -> bool:
     if value is None:
         return default
@@ -95,7 +87,7 @@ def _clamp_duration(value: Any) -> int:
     return max(4, min(15, duration))
 
 
-def _resolve_model(model: Optional[str]) -> str:
+def _resolve_model(model: str | None) -> str:
     raw = (model or os.environ.get("OO_SEEDANCE_MODEL") or DEFAULT_MODEL).strip()
     if raw not in _MODELS:
         raise ValueError(f"Unsupported Seedance model '{raw}'. Supported: {', '.join(sorted(_MODELS))}")
@@ -125,16 +117,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         "--json",
     ]
 
-    organization = os.environ.get("OO_SEEDANCE_ORGANIZATION") or os.environ.get("OO_VIDEO_ORGANIZATION")
-    personal = _env_bool("OO_SEEDANCE_PERSONAL")
-    if personal is None:
-        personal = _env_bool("OO_VIDEO_PERSONAL")
-    if organization and personal:
-        raise ValueError("OO_SEEDANCE_ORGANIZATION/OO_VIDEO_ORGANIZATION and personal mode cannot both be set.")
-    if organization:
-        cmd.extend(["--organization", organization])
-    elif personal:
-        cmd.append("--personal")
+    cmd.extend(team_arguments("OO_SEEDANCE", "OO_VIDEO"))
 
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=900)
@@ -162,6 +145,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
 
 def _run_oo_file_upload(path: str) -> str:
     cmd = ["oo", "file", "upload", path, "--json"]
+    cmd.extend(team_arguments("OO_SEEDANCE", "OO_VIDEO"))
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=300)
     except FileNotFoundError as exc:
@@ -186,8 +170,7 @@ def _normalize_reference(ref: str) -> str:
     value = ref.strip()
     if value.startswith(("http://", "https://")):
         return value
-    if value.startswith("file://"):
-        value = value[7:]
+    value = value.removeprefix("file://")
     expanded = os.path.expanduser(value)
     if os.path.isfile(expanded):
         return _run_oo_file_upload(expanded)
@@ -266,7 +249,7 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
     def is_available(self) -> bool:
         return shutil.which("oo") is not None
 
-    def list_models(self) -> List[Dict[str, Any]]:
+    def list_models(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": DEFAULT_MODEL,
@@ -286,10 +269,10 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
             },
         ]
 
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return DEFAULT_MODEL
 
-    def get_setup_schema(self) -> Dict[str, Any]:
+    def get_setup_schema(self) -> dict[str, Any]:
         return {
             "name": "OOMOL Seedance",
             "badge": "oomol",
@@ -297,7 +280,7 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
             "env_vars": [],
         }
 
-    def capabilities(self) -> Dict[str, Any]:
+    def capabilities(self) -> dict[str, Any]:
         return {
             "modalities": ["text", "image"],
             "aspect_ratios": list(_RATIOS),
@@ -313,17 +296,17 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
-        image_url: Optional[str] = None,
-        reference_image_urls: Optional[List[str]] = None,
-        duration: Optional[int] = None,
+        model: str | None = None,
+        image_url: str | None = None,
+        reference_image_urls: list[str] | None = None,
+        duration: int | None = None,
         aspect_ratio: str = DEFAULT_ASPECT_RATIO,
         resolution: str = DEFAULT_RESOLUTION,
-        negative_prompt: Optional[str] = None,
-        audio: Optional[bool] = None,
-        seed: Optional[int] = None,
+        negative_prompt: str | None = None,
+        audio: bool | None = None,
+        seed: int | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         del negative_prompt
         resolved_model = _resolve_model(model)
         ratio = _resolve_ratio(aspect_ratio)
@@ -349,29 +332,29 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
                 aspect_ratio=ratio,
             )
 
-        refs: list[dict[str, str]] = []
-        if isinstance(image_url, str) and image_url.strip():
-            refs.append({"url": _normalize_reference(image_url), "role": "first_frame"})
-        for ref in reference_image_urls or []:
-            if isinstance(ref, str) and ref.strip():
-                refs.append({"url": _normalize_reference(ref), "role": "reference_image"})
-        refs = refs[:9]
-
-        request: dict[str, Any] = {
-            "model": resolved_model,
-            "prompt": prompt,
-            "images": refs,
-            "returnLastFrame": return_last_frame,
-            "generateAudio": generate_audio,
-            "resolution": resolved_resolution,
-            "ratio": ratio,
-            "duration": resolved_duration,
-            "watermark": watermark,
-        }
-        if seed is not None:
-            request["seed"] = int(seed)
-
         try:
+            refs: list[dict[str, str]] = []
+            if isinstance(image_url, str) and image_url.strip():
+                refs.append({"url": _normalize_reference(image_url), "role": "first_frame"})
+            for ref in reference_image_urls or []:
+                if isinstance(ref, str) and ref.strip():
+                    refs.append({"url": _normalize_reference(ref), "role": "reference_image"})
+            refs = refs[:9]
+
+            request: dict[str, Any] = {
+                "model": resolved_model,
+                "prompt": prompt,
+                "images": refs,
+                "returnLastFrame": return_last_frame,
+                "generateAudio": generate_audio,
+                "resolution": resolved_resolution,
+                "ratio": ratio,
+                "duration": resolved_duration,
+                "watermark": watermark,
+            }
+            if seed is not None:
+                request["seed"] = int(seed)
+
             submit_payload = _run_oo_connector(_SUBMIT_ACTION, request, service=service)
             session_id = _extract_session_id(submit_payload)
             result_payload = _poll_result(session_id, service=service)
@@ -394,7 +377,8 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
                             timeout=120,
                         )
                     )
-                except Exception:
+                # Cover retrieval is best effort after successful video generation.
+                except Exception:  # noqa: BLE001
                     cover_path = ""
             try:
                 _write_delivery_metadata(

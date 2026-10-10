@@ -5,12 +5,11 @@ from __future__ import annotations
 import base64
 import json
 import os
-import re
 import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from agent.image_gen_provider import (
     DEFAULT_ASPECT_RATIO,
@@ -21,8 +20,7 @@ from agent.image_gen_provider import (
     save_url_image,
     success_response,
 )
-from oomol_hermes_oo import require_oo_authentication
-
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 PROVIDER_NAME = "oo_gpt_image_2"
 DEFAULT_SERVICE = "fusion-api"
@@ -42,56 +40,6 @@ _TEXT_RESULT_ACTION = "openai_image_async_result"
 _EDIT_SUBMIT_ACTION = "openai_image_edit_async_submit"
 _EDIT_RESULT_ACTION = "openai_image_edit_async_result"
 
-_PROCESS_ERROR_PREVIEW_MAX_CHARS = 2_000
-_SENSITIVE_PROCESS_OUTPUT_PATTERNS = (
-    # Match a bearer credential before generic key/value patterns can consume
-    # only its ``Bearer`` prefix.
-    re.compile(r'(?i)\bbearer\b[^\r\n,;]*'),
-    # Structured payload fields that can carry credentials or user input.
-    re.compile(
-        r'(?i)("(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|'
-        r'token|secret|password|cookie|prompt|image_url|images)"\s*:\s*)'
-        r'("(?:[^"\\]|\\.)*"|\[[^\]]*\]|\{[^}]*\}|[^,\s}]+)'
-    ),
-    # Textual CLI diagnostics commonly include these forms.
-    re.compile(
-        r'(?i)(\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|'
-        r'token|secret|password|cookie)\b\s*(?:[:=]\s*|\s+))[^\s,;]+'
-    ),
-    # Keep generic test/sentinel values and obvious sensitive labels out of logs.
-    re.compile(r'(?i)\bsecret[-\w]*\b'),
-    re.compile(r'(?i)\bsensitive\s+stdout\b'),
-)
-
-
-def _safe_process_error_output(stdout: str, stderr: str) -> str:
-    """Return a bounded, redacted preview of a failed OO CLI invocation."""
-    parts: list[str] = []
-    for label, output in (("stderr", stderr), ("stdout", stdout)):
-        value = output.strip()
-        if not value:
-            continue
-        for pattern in _SENSITIVE_PROCESS_OUTPUT_PATTERNS:
-            value = pattern.sub(
-                lambda match: (
-                    f"{match.group(1)}<redacted>"
-                    if match.lastindex and match.group(1) is not None
-                    else "<redacted>"
-                ),
-                value,
-            )
-        parts.append(f"{label}: {value}")
-
-    return " | ".join(parts)[:_PROCESS_ERROR_PREVIEW_MAX_CHARS]
-
-
-def _env_bool(name: str) -> bool | None:
-    raw = os.environ.get(name)
-    if raw is None or raw == "":
-        return None
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> dict[str, Any]:
     cmd = [
         "oo",
@@ -105,16 +53,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         "--json",
     ]
 
-    organization = os.environ.get("OO_GPT_IMAGE_2_ORGANIZATION") or os.environ.get("OO_IMAGE_ORGANIZATION")
-    personal = _env_bool("OO_GPT_IMAGE_2_PERSONAL")
-    if personal is None:
-        personal = _env_bool("OO_IMAGE_PERSONAL")
-    if organization and personal:
-        raise ValueError("OO_GPT_IMAGE_2_ORGANIZATION/OO_IMAGE_ORGANIZATION and personal mode cannot both be set.")
-    if organization:
-        cmd.extend(["--organization", organization])
-    elif personal:
-        cmd.append("--personal")
+    cmd.extend(team_arguments("OO_GPT_IMAGE_2", "OO_IMAGE"))
 
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=900)
@@ -124,10 +63,8 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         raise RuntimeError(f"oo connector action timed out: {action}") from exc
 
     if proc.returncode != 0:
-        message = f"oo connector action {action} failed with exit code {proc.returncode}"
-        if detail := _safe_process_error_output(proc.stdout, proc.stderr):
-            message = f"{message}: {detail}"
-        raise RuntimeError(message)
+        # Raw CLI diagnostics can contain prompts and signed download URLs.
+        raise RuntimeError(f"oo connector action {action} failed with exit code {proc.returncode}")
 
     try:
         parsed = json.loads(proc.stdout)
@@ -143,6 +80,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
 
 def _run_oo_file_upload(path: str) -> str:
     cmd = ["oo", "file", "upload", path, "--json"]
+    cmd.extend(team_arguments("OO_GPT_IMAGE_2", "OO_IMAGE"))
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=300)
     except FileNotFoundError as exc:
@@ -254,8 +192,7 @@ def _normalize_reference(ref: str) -> str:
     value = ref.strip()
     if value.startswith(("http://", "https://")):
         return value
-    if value.startswith("file://"):
-        value = value[7:]
+    value = value.removeprefix("file://")
     expanded = os.path.expanduser(value)
     if os.path.isfile(expanded):
         return _run_oo_file_upload(expanded)
@@ -293,7 +230,7 @@ class OOGPTImage2Provider(ImageGenProvider):
     def is_available(self) -> bool:
         return shutil.which("oo") is not None
 
-    def list_models(self) -> List[Dict[str, Any]]:
+    def list_models(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": "gpt-image-2",
@@ -304,10 +241,10 @@ class OOGPTImage2Provider(ImageGenProvider):
             }
         ]
 
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return DEFAULT_MODEL
 
-    def get_setup_schema(self) -> Dict[str, Any]:
+    def get_setup_schema(self) -> dict[str, Any]:
         return {
             "name": "OOMOL GPT Image 2",
             "badge": "oomol",
@@ -315,7 +252,7 @@ class OOGPTImage2Provider(ImageGenProvider):
             "env_vars": [],
         }
 
-    def capabilities(self) -> Dict[str, Any]:
+    def capabilities(self) -> dict[str, Any]:
         return {"modalities": ["text", "image"], "max_reference_images": 16}
 
     def generate(
@@ -323,10 +260,10 @@ class OOGPTImage2Provider(ImageGenProvider):
         prompt: str,
         aspect_ratio: str = DEFAULT_ASPECT_RATIO,
         *,
-        image_url: Optional[str] = None,
-        reference_image_urls: Optional[List[str]] = None,
+        image_url: str | None = None,
+        reference_image_urls: list[str] | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         aspect = resolve_aspect_ratio(aspect_ratio)
         model = str(kwargs.get("model") or os.environ.get("OO_GPT_IMAGE_2_MODEL") or DEFAULT_MODEL).strip()
         service = os.environ.get("OO_GPT_IMAGE_2_SERVICE") or DEFAULT_SERVICE
@@ -367,13 +304,13 @@ class OOGPTImage2Provider(ImageGenProvider):
         action_submit = _TEXT_SUBMIT_ACTION
         action_result = _TEXT_RESULT_ACTION
         modality = "text"
-        if refs:
-            action_submit = _EDIT_SUBMIT_ACTION
-            action_result = _EDIT_RESULT_ACTION
-            modality = "image"
-            request["images"] = [{"image_url": _normalize_reference(ref)} for ref in refs]
-
         try:
+            if refs:
+                action_submit = _EDIT_SUBMIT_ACTION
+                action_result = _EDIT_RESULT_ACTION
+                modality = "image"
+                request["images"] = [{"image_url": _normalize_reference(ref)} for ref in refs]
+
             submit_payload = _run_oo_connector(action_submit, request, service=service)
             session_id = _extract_session_id(submit_payload)
             result_payload = _poll_result(session_id, action=action_result, service=service)

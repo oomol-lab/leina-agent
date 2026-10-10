@@ -92,7 +92,7 @@ The image adds the following OOMOL and OO framework Skills:
 | Office and PDF | `office-files`, `pdf-files` |
 | Public research | `public-social-research` |
 
-These Skills let Hermes work with Office and PDF files, extract text with OCR,
+These Skills let Hermes work with Office and PDF files,
 research public social content, use connected services, and find or manage
 Skills through OO.
 

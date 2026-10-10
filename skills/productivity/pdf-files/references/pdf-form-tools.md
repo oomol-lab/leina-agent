@@ -2,7 +2,7 @@
 
 Use these bundled helper scripts before writing one-off PDF form code. They are
 synced under `${HERMES_HOME}/skills/productivity/pdf-files` and run with the
-image-provided `/opt/hermes/.venv/bin/python`.
+image-provided `/opt/oomol-hermes-agent/document-venv/bin/python`.
 
 ## Create Labeled Blank Forms
 
@@ -12,9 +12,9 @@ and body content, and places short text fields in one- or two-column rows with
 safe label/field spacing. Use it before writing custom coordinate code.
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/create_labeled_acroform.py" \
-  /opt/data/test-outputs/form-spec.json
+  /data/workspace/test-outputs/form-spec.json
 ```
 
 Example field rows:
@@ -45,9 +45,9 @@ Use `scripts/inspect_pdf_widgets.py` after creating an AcroForm. It checks page
 bounds, safe margins, minimum field size, and widget overlap.
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/inspect_pdf_widgets.py" \
-  /opt/data/test-outputs/form.pdf
+  /data/workspace/test-outputs/form.pdf
 ```
 
 Default safety rules:
@@ -68,9 +68,9 @@ same row as their widgets as form layout defects.
 Use `scripts/inspect_pdf_form_labels.py` for this label/widget proximity check:
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/inspect_pdf_form_labels.py" \
-  /opt/data/test-outputs/form.pdf \
+  /data/workspace/test-outputs/form.pdf \
   --labels '{"supplier_contact":"供应商联系人","supplier_note":"供应商备注"}'
 ```
 
@@ -92,17 +92,17 @@ CJK text overlay, merges the overlay, removes filled text widgets, and prunes
 filled fields from `/AcroForm`.
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/fill_acroform_static.py" \
-  /opt/data/test-outputs/form.pdf \
-  /opt/data/test-outputs/filled.pdf \
+  /data/workspace/test-outputs/form.pdf \
+  /data/workspace/test-outputs/filled.pdf \
   --values '{"supplier_contact":"刘志强","confirmation_date":"2026-07-02"}'
 ```
 
 Use a JSON file for larger values to avoid shell escaping mistakes:
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/fill_acroform_static.py" \
   input.pdf output.pdf --values values.json
 ```
@@ -115,9 +115,9 @@ nonblank pages, duplicate nearby text, `qpdf --check`, and every-page Poppler
 rendering when available.
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/verify_pdf_delivery.py" \
-  /opt/data/test-outputs/filled.pdf \
+  /data/workspace/test-outputs/filled.pdf \
   --contains 2026-07-02 \
   --contains 刘志强 \
   --no-duplicate-nearby 2026-07-02 \
@@ -136,10 +136,10 @@ signature. It creates a short-lived self-signed certificate in memory and signs
 with pyHanko.
 
 ```sh
-/opt/hermes/.venv/bin/python \
+/opt/oomol-hermes-agent/document-venv/bin/python \
   "${HERMES_HOME}/skills/productivity/pdf-files/scripts/sign_pdf_test_cert.py" \
-  /opt/data/test-outputs/filled.pdf \
-  /opt/data/test-outputs/signed.pdf \
+  /data/workspace/test-outputs/filled.pdf \
+  /data/workspace/test-outputs/signed.pdf \
   --field-name TestSignature
 ```
 
