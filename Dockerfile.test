@@ -1,4 +1,4 @@
-ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.11.6-python3.11-trixie
+ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.13.0-python3.11-trixie@sha256:84ab7308ffa832c51f8d10a2e28b3d28be35a3459da40812e4e43e4793435836
 
 FROM ${UV_IMAGE} AS repository-tests
 
