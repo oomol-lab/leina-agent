@@ -7,7 +7,6 @@ from pathlib import Path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-
 FONT_NAME = "HermesCJK"
 
 
@@ -79,9 +78,8 @@ def register_embedded_cjk_font(
                 continue
             pdfmetrics.registerFont(font)
             return FONT_NAME
-        except (
-            Exception
-        ) as exc:  # ReportLab exposes several font-parser exception types.
+        # ReportLab exposes several font-parser exception types; try each font.
+        except Exception as exc:  # noqa: BLE001
             errors.append(f"{path}: {exc}")
     detail = "; ".join(errors[-3:])
     raise SystemExit(

@@ -9,8 +9,9 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+from agent.image_gen_provider import save_url_image
 from agent.video_gen_provider import (
     DEFAULT_ASPECT_RATIO,
     DEFAULT_RESOLUTION,
@@ -19,9 +20,7 @@ from agent.video_gen_provider import (
     save_url_video,
     success_response,
 )
-from agent.image_gen_provider import save_url_image
 from oomol_hermes_oo import require_oo_authentication, team_arguments
-
 
 PROVIDER_NAME = "oo_seedance"
 DEFAULT_SERVICE = "fusion-api"
@@ -88,7 +87,7 @@ def _clamp_duration(value: Any) -> int:
     return max(4, min(15, duration))
 
 
-def _resolve_model(model: Optional[str]) -> str:
+def _resolve_model(model: str | None) -> str:
     raw = (model or os.environ.get("OO_SEEDANCE_MODEL") or DEFAULT_MODEL).strip()
     if raw not in _MODELS:
         raise ValueError(f"Unsupported Seedance model '{raw}'. Supported: {', '.join(sorted(_MODELS))}")
@@ -171,8 +170,7 @@ def _normalize_reference(ref: str) -> str:
     value = ref.strip()
     if value.startswith(("http://", "https://")):
         return value
-    if value.startswith("file://"):
-        value = value[7:]
+    value = value.removeprefix("file://")
     expanded = os.path.expanduser(value)
     if os.path.isfile(expanded):
         return _run_oo_file_upload(expanded)
@@ -251,7 +249,7 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
     def is_available(self) -> bool:
         return shutil.which("oo") is not None
 
-    def list_models(self) -> List[Dict[str, Any]]:
+    def list_models(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": DEFAULT_MODEL,
@@ -271,10 +269,10 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
             },
         ]
 
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return DEFAULT_MODEL
 
-    def get_setup_schema(self) -> Dict[str, Any]:
+    def get_setup_schema(self) -> dict[str, Any]:
         return {
             "name": "OOMOL Seedance",
             "badge": "oomol",
@@ -282,7 +280,7 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
             "env_vars": [],
         }
 
-    def capabilities(self) -> Dict[str, Any]:
+    def capabilities(self) -> dict[str, Any]:
         return {
             "modalities": ["text", "image"],
             "aspect_ratios": list(_RATIOS),
@@ -298,17 +296,17 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
-        image_url: Optional[str] = None,
-        reference_image_urls: Optional[List[str]] = None,
-        duration: Optional[int] = None,
+        model: str | None = None,
+        image_url: str | None = None,
+        reference_image_urls: list[str] | None = None,
+        duration: int | None = None,
         aspect_ratio: str = DEFAULT_ASPECT_RATIO,
         resolution: str = DEFAULT_RESOLUTION,
-        negative_prompt: Optional[str] = None,
-        audio: Optional[bool] = None,
-        seed: Optional[int] = None,
+        negative_prompt: str | None = None,
+        audio: bool | None = None,
+        seed: int | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         del negative_prompt
         resolved_model = _resolve_model(model)
         ratio = _resolve_ratio(aspect_ratio)
@@ -379,7 +377,8 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
                             timeout=120,
                         )
                     )
-                except Exception:
+                # Cover retrieval is best effort after successful video generation.
+                except Exception:  # noqa: BLE001
                     cover_path = ""
             try:
                 _write_delivery_metadata(

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/configure-oo-skills.py"
 FRAMEWORK_SKILLS = (

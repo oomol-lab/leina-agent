@@ -11,11 +11,10 @@ import json
 import re
 import shutil
 import subprocess
-from typing import Any, Dict
+from typing import Any
 
 from agent.web_search_provider import WebSearchProvider
 from oomol_hermes_oo import require_oo_authentication, team_arguments
-
 
 _SERVICE = "fusion-api"
 _ACTION = "jina_reader_search"
@@ -28,7 +27,7 @@ _RESULT_PATTERN = re.compile(
 )
 
 
-def _run_search(query: str) -> Dict[str, Any]:
+def _run_search(query: str) -> dict[str, Any]:
     """Run the documented OO Fusion Jina Reader search action."""
     command = [
         "oo", "connector", "run", _SERVICE, "--action", _ACTION, "--data",
@@ -52,16 +51,17 @@ def _run_search(query: str) -> Dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise RuntimeError("OOMOL Jina web search returned invalid JSON.") from exc
     if not isinstance(response, dict):
-        raise RuntimeError("OOMOL Jina web search returned unexpected JSON.")
+        # Keep external-response failures on the provider's RuntimeError path.
+        raise RuntimeError("OOMOL Jina web search returned unexpected JSON.")  # noqa: TRY004
     return response
 
 
-def _normalize_results(response: Dict[str, Any], limit: int) -> list[Dict[str, Any]]:
+def _normalize_results(response: dict[str, Any], limit: int) -> list[dict[str, Any]]:
     """Convert Jina Reader's indexed text response to Hermes web results."""
     data = response.get("data")
     content = data.get("content") if isinstance(data, dict) else None
     if not isinstance(content, str):
-        raise RuntimeError("OOMOL Jina web search response is missing data.content.")
+        raise RuntimeError("OOMOL Jina web search response is missing data.content.")  # noqa: TRY004
 
     results = []
     for match in _RESULT_PATTERN.finditer(content):
@@ -105,7 +105,7 @@ class OOJinaWebSearchProvider(WebSearchProvider):
     def supports_extract(self) -> bool:
         return False
 
-    def search(self, query: str, limit: int = 5) -> Dict[str, Any]:
+    def search(self, query: str, limit: int = 5) -> dict[str, Any]:
         try:
             bounded_limit = min(max(int(limit), 1), 100)
         except (TypeError, ValueError):
@@ -119,7 +119,7 @@ class OOJinaWebSearchProvider(WebSearchProvider):
         except RuntimeError as exc:
             return {"success": False, "error": str(exc)}
 
-    def get_setup_schema(self) -> Dict[str, Any]:
+    def get_setup_schema(self) -> dict[str, Any]:
         return {
             "name": self.display_name,
             "badge": "OOMOL",

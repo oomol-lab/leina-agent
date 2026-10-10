@@ -8,11 +8,10 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "plugins" / "common"))
 
-from oomol_hermes_oo import auth  # noqa: E402
+from oomol_hermes_oo import auth
 
 
 def _status(value: dict[str, object]) -> subprocess.CompletedProcess[str]:

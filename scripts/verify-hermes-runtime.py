@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -29,10 +29,11 @@ def main() -> None:
             "/opt/oomol-hermes-agent/config/config.seed.yaml",
             Path(home) / "config.yaml",
         )
-        from hermes_cli.version_info import get_version_info
         from agent.skill_utils import (
-            extract_skill_description, is_skill_description_truncated_for_prompt,
+            extract_skill_description,
+            is_skill_description_truncated_for_prompt,
         )
+        from hermes_cli.version_info import get_version_info
 
         identity = get_version_info()
         assert identity.base_version == stamp["baseVersion"]
@@ -51,10 +52,10 @@ def main() -> None:
         assert profile and profile.api_mode == "codex_responses"
         assert not profile.supports_health_check
 
-        from hermes_cli.plugins import discover_plugins
         from agent.image_gen_registry import get_provider as image_provider
         from agent.video_gen_registry import get_provider as video_provider
         from agent.web_search_registry import get_provider as web_provider
+        from hermes_cli.plugins import discover_plugins
 
         discover_plugins()
         for lookup, name in (

@@ -9,7 +9,6 @@ from typing import Any
 
 import yaml
 
-
 OO_FRAMEWORK_SKILLS = (
     "oo",
     "oo-create-skill",
@@ -26,7 +25,8 @@ def _parse_skill(path: Path) -> tuple[dict[str, Any], str]:
     raw_frontmatter, body = content[4:].split("\n---\n", 1)
     frontmatter = yaml.safe_load(raw_frontmatter)
     if not isinstance(frontmatter, dict):
-        raise ValueError(f"invalid SKILL.md frontmatter: {path}")
+        # Invalid file contents retain the same validation exception contract.
+        raise ValueError(f"invalid SKILL.md frontmatter: {path}")  # noqa: TRY004
     return frontmatter, body
 
 
@@ -34,10 +34,10 @@ def _configure_skill(path: Path) -> None:
     frontmatter, body = _parse_skill(path)
     metadata = frontmatter.setdefault("metadata", {})
     if not isinstance(metadata, dict):
-        raise ValueError(f"invalid metadata mapping: {path}")
+        raise ValueError(f"invalid metadata mapping: {path}")  # noqa: TRY004
     hermes_metadata = metadata.setdefault("hermes", {})
     if not isinstance(hermes_metadata, dict):
-        raise ValueError(f"invalid metadata.hermes mapping: {path}")
+        raise ValueError(f"invalid metadata.hermes mapping: {path}")  # noqa: TRY004
     hermes_metadata["prompt_description_max_chars"] = PROMPT_DESCRIPTION_MAX_CHARS
     rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True)
     path.write_text(f"---\n{rendered}---\n{body}", encoding="utf-8", newline="\n")

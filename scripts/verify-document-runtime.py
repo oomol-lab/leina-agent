@@ -11,7 +11,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-
 ROOT = Path("/opt/oomol-hermes-agent/document-venv")
 SKILLS = Path("/opt/oomol-hermes-agent/curated-skills/productivity")
 
@@ -46,8 +45,7 @@ def run(*command: str) -> None:
     result = subprocess.run(
         command,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
         timeout=120,
     )

@@ -9,7 +9,6 @@ import threading
 from dataclasses import dataclass, field
 from typing import IO, Any
 
-
 _AUTH_STATUS_TIMEOUT_SECONDS = 10
 _LOGIN_URL_TIMEOUT_SECONDS = 20
 _LOGIN_COMPLETION_TIMEOUT_SECONDS = 600
@@ -151,7 +150,8 @@ def _read_auth_status() -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise RuntimeError("OO authentication status returned invalid JSON.") from exc
     if not isinstance(status, dict):
-        raise RuntimeError("OO authentication status returned an unexpected response.")
+        # Malformed CLI output is a provider failure, not caller type misuse.
+        raise RuntimeError("OO authentication status returned an unexpected response.")  # noqa: TRY004
     return status
 
 

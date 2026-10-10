@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from agent.image_gen_provider import (
     DEFAULT_ASPECT_RATIO,
@@ -21,7 +21,6 @@ from agent.image_gen_provider import (
     success_response,
 )
 from oomol_hermes_oo import require_oo_authentication, team_arguments
-
 
 PROVIDER_NAME = "oo_nano_banana"
 DEFAULT_SERVICE = "fusion-api"
@@ -68,7 +67,7 @@ _MODEL_ALIASES = {
 }
 
 
-def _resolve_model(model: Optional[str]) -> str:
+def _resolve_model(model: str | None) -> str:
     raw = (
         model
         or os.environ.get("OO_NANO_BANANA_VARIANT")
@@ -149,8 +148,7 @@ def _normalize_reference(ref: str) -> str:
     value = ref.strip()
     if value.startswith(("http://", "https://")):
         return value
-    if value.startswith("file://"):
-        value = value[7:]
+    value = value.removeprefix("file://")
     expanded = os.path.expanduser(value)
     if os.path.isfile(expanded):
         return _run_oo_file_upload(expanded)
@@ -254,7 +252,7 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
     def is_available(self) -> bool:
         return shutil.which("oo") is not None
 
-    def list_models(self) -> List[Dict[str, Any]]:
+    def list_models(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": "nano-banana-pro",
@@ -279,10 +277,10 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
             },
         ]
 
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return DEFAULT_MODEL
 
-    def get_setup_schema(self) -> Dict[str, Any]:
+    def get_setup_schema(self) -> dict[str, Any]:
         return {
             "name": "OOMOL Nano Banana",
             "badge": "oomol",
@@ -290,7 +288,7 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
             "env_vars": [],
         }
 
-    def capabilities(self) -> Dict[str, Any]:
+    def capabilities(self) -> dict[str, Any]:
         return {"modalities": ["text", "image"], "max_reference_images": 2}
 
     def generate(
@@ -298,10 +296,10 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
         prompt: str,
         aspect_ratio: str = DEFAULT_ASPECT_RATIO,
         *,
-        image_url: Optional[str] = None,
-        reference_image_urls: Optional[List[str]] = None,
+        image_url: str | None = None,
+        reference_image_urls: list[str] | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         aspect = resolve_aspect_ratio(aspect_ratio)
         model = _resolve_model(kwargs.get("model"))
         actions = _ACTION_SETS[model]

@@ -8,12 +8,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from pdf_fonts import FONT_NAME, register_embedded_cjk_font
 from reportlab.lib.colors import HexColor, black
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-
-from pdf_fonts import FONT_NAME, register_embedded_cjk_font
-
 
 PAGE_WIDTH, PAGE_HEIGHT = A4
 LEFT_MARGIN = 36.0

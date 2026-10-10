@@ -141,10 +141,10 @@ def inspect_labels(
             })
             continue
 
-        best = sorted(
+        best = min(
             candidates,
             key=lambda item: (0 if item["placement"] == "left" else 1, item["row_delta"], abs(item["gap"])),
-        )[0]
+        )
         matched = {
             "field": field_name,
             "label": best["label"],

@@ -13,6 +13,8 @@ else
     [ "$status" -eq 64 ] || exit "$status"
 fi
 
+# The quoted script intentionally expands variables inside the container.
+# shellcheck disable=SC2016
 "$docker_cli" run --rm --network none \
     -e OO_API_KEY=offline-smoke-placeholder \
     -e OO_LLM_BASE_URL=https://example.invalid/v1 \

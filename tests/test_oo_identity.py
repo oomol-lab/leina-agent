@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "plugins" / "common"))
 
-from oomol_hermes_oo.identity import team_arguments  # noqa: E402
+from oomol_hermes_oo.identity import team_arguments
 
 
 @pytest.fixture(autouse=True)
