@@ -14,7 +14,7 @@ import subprocess
 from typing import Any, Dict
 
 from agent.web_search_provider import WebSearchProvider
-from oomol_hermes_oo import require_oo_authentication
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 
 _SERVICE = "fusion-api"
@@ -34,6 +34,7 @@ def _run_search(query: str) -> Dict[str, Any]:
         "oo", "connector", "run", _SERVICE, "--action", _ACTION, "--data",
         json.dumps({"content": query}, ensure_ascii=False), "--json",
     ]
+    command.extend(team_arguments("OO_JINA"))
     try:
         completed = subprocess.run(
             command, check=False, text=True, capture_output=True, timeout=_TIMEOUT_SECONDS,

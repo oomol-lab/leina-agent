@@ -6,15 +6,15 @@
     "version": "0.20.2"
   },
   "oo_cli": {
-    "version": "1.7.4",
+    "version": "1.9.5",
     "artifacts": {
       "linux-amd64": {
         "platform": "x64",
-        "sha256": "37595b2d8e4cc2c333524442f2b2400191a00bdf993d0925ee2fba11c6687fef"
+        "sha256": "8d4f6e004f08e1bceba63171132d1669db17ae959a9dc6a5df5fa9ec9b13ac6c"
       },
       "linux-arm64": {
         "platform": "arm64",
-        "sha256": "6c1f8ae4fc65547288b2ef58a423212aa5709bd9cf075366bfeaa6be00bfd3dd"
+        "sha256": "00611657644ab56663f2bdf0e83e2c45986e0a0f76590dbff3492e8c11aaaf31"
       }
     }
   }

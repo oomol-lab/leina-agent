@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import json
 import os
-import re
 import shutil
 import subprocess
 import time
@@ -21,7 +20,7 @@ from agent.image_gen_provider import (
     save_url_image,
     success_response,
 )
-from oomol_hermes_oo import require_oo_authentication
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 
 PROVIDER_NAME = "oo_gpt_image_2"
@@ -42,56 +41,6 @@ _TEXT_RESULT_ACTION = "openai_image_async_result"
 _EDIT_SUBMIT_ACTION = "openai_image_edit_async_submit"
 _EDIT_RESULT_ACTION = "openai_image_edit_async_result"
 
-_PROCESS_ERROR_PREVIEW_MAX_CHARS = 2_000
-_SENSITIVE_PROCESS_OUTPUT_PATTERNS = (
-    # Match a bearer credential before generic key/value patterns can consume
-    # only its ``Bearer`` prefix.
-    re.compile(r'(?i)\bbearer\b[^\r\n,;]*'),
-    # Structured payload fields that can carry credentials or user input.
-    re.compile(
-        r'(?i)("(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|'
-        r'token|secret|password|cookie|prompt|image_url|images)"\s*:\s*)'
-        r'("(?:[^"\\]|\\.)*"|\[[^\]]*\]|\{[^}]*\}|[^,\s}]+)'
-    ),
-    # Textual CLI diagnostics commonly include these forms.
-    re.compile(
-        r'(?i)(\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|'
-        r'token|secret|password|cookie)\b\s*(?:[:=]\s*|\s+))[^\s,;]+'
-    ),
-    # Keep generic test/sentinel values and obvious sensitive labels out of logs.
-    re.compile(r'(?i)\bsecret[-\w]*\b'),
-    re.compile(r'(?i)\bsensitive\s+stdout\b'),
-)
-
-
-def _safe_process_error_output(stdout: str, stderr: str) -> str:
-    """Return a bounded, redacted preview of a failed OO CLI invocation."""
-    parts: list[str] = []
-    for label, output in (("stderr", stderr), ("stdout", stdout)):
-        value = output.strip()
-        if not value:
-            continue
-        for pattern in _SENSITIVE_PROCESS_OUTPUT_PATTERNS:
-            value = pattern.sub(
-                lambda match: (
-                    f"{match.group(1)}<redacted>"
-                    if match.lastindex and match.group(1) is not None
-                    else "<redacted>"
-                ),
-                value,
-            )
-        parts.append(f"{label}: {value}")
-
-    return " | ".join(parts)[:_PROCESS_ERROR_PREVIEW_MAX_CHARS]
-
-
-def _env_bool(name: str) -> bool | None:
-    raw = os.environ.get(name)
-    if raw is None or raw == "":
-        return None
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> dict[str, Any]:
     cmd = [
         "oo",
@@ -105,16 +54,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         "--json",
     ]
 
-    organization = os.environ.get("OO_GPT_IMAGE_2_ORGANIZATION") or os.environ.get("OO_IMAGE_ORGANIZATION")
-    personal = _env_bool("OO_GPT_IMAGE_2_PERSONAL")
-    if personal is None:
-        personal = _env_bool("OO_IMAGE_PERSONAL")
-    if organization and personal:
-        raise ValueError("OO_GPT_IMAGE_2_ORGANIZATION/OO_IMAGE_ORGANIZATION and personal mode cannot both be set.")
-    if organization:
-        cmd.extend(["--organization", organization])
-    elif personal:
-        cmd.append("--personal")
+    cmd.extend(team_arguments("OO_GPT_IMAGE_2", "OO_IMAGE"))
 
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=900)
@@ -124,10 +64,8 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         raise RuntimeError(f"oo connector action timed out: {action}") from exc
 
     if proc.returncode != 0:
-        message = f"oo connector action {action} failed with exit code {proc.returncode}"
-        if detail := _safe_process_error_output(proc.stdout, proc.stderr):
-            message = f"{message}: {detail}"
-        raise RuntimeError(message)
+        # Raw CLI diagnostics can contain prompts and signed download URLs.
+        raise RuntimeError(f"oo connector action {action} failed with exit code {proc.returncode}")
 
     try:
         parsed = json.loads(proc.stdout)
@@ -143,6 +81,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
 
 def _run_oo_file_upload(path: str) -> str:
     cmd = ["oo", "file", "upload", path, "--json"]
+    cmd.extend(team_arguments("OO_GPT_IMAGE_2", "OO_IMAGE"))
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=300)
     except FileNotFoundError as exc:

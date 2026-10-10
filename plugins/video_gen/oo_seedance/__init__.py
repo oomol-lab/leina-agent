@@ -20,7 +20,7 @@ from agent.video_gen_provider import (
     success_response,
 )
 from agent.image_gen_provider import save_url_image
-from oomol_hermes_oo import require_oo_authentication
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 
 PROVIDER_NAME = "oo_seedance"
@@ -60,13 +60,6 @@ def _write_delivery_metadata(video_path: Path, metadata: dict[str, Any]) -> None
             temp_path.unlink()
         except FileNotFoundError:
             pass
-
-
-def _env_bool(name: str) -> bool | None:
-    raw = os.environ.get(name)
-    if raw is None or raw == "":
-        return None
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _coerce_bool(value: Any, default: bool) -> bool:
@@ -125,16 +118,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         "--json",
     ]
 
-    organization = os.environ.get("OO_SEEDANCE_ORGANIZATION") or os.environ.get("OO_VIDEO_ORGANIZATION")
-    personal = _env_bool("OO_SEEDANCE_PERSONAL")
-    if personal is None:
-        personal = _env_bool("OO_VIDEO_PERSONAL")
-    if organization and personal:
-        raise ValueError("OO_SEEDANCE_ORGANIZATION/OO_VIDEO_ORGANIZATION and personal mode cannot both be set.")
-    if organization:
-        cmd.extend(["--organization", organization])
-    elif personal:
-        cmd.append("--personal")
+    cmd.extend(team_arguments("OO_SEEDANCE", "OO_VIDEO"))
 
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=900)
@@ -162,6 +146,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
 
 def _run_oo_file_upload(path: str) -> str:
     cmd = ["oo", "file", "upload", path, "--json"]
+    cmd.extend(team_arguments("OO_SEEDANCE", "OO_VIDEO"))
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=300)
     except FileNotFoundError as exc:

@@ -20,7 +20,7 @@ from agent.image_gen_provider import (
     save_url_image,
     success_response,
 )
-from oomol_hermes_oo import require_oo_authentication
+from oomol_hermes_oo import require_oo_authentication, team_arguments
 
 
 PROVIDER_NAME = "oo_nano_banana"
@@ -68,13 +68,6 @@ _MODEL_ALIASES = {
 }
 
 
-def _env_bool(name: str) -> bool | None:
-    raw = os.environ.get(name)
-    if raw is None or raw == "":
-        return None
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _resolve_model(model: Optional[str]) -> str:
     raw = (
         model
@@ -104,14 +97,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
         "--json",
     ]
 
-    organization = os.environ.get("OO_NANO_BANANA_ORGANIZATION")
-    personal = _env_bool("OO_NANO_BANANA_PERSONAL")
-    if organization and personal:
-        raise ValueError("OO_NANO_BANANA_ORGANIZATION and OO_NANO_BANANA_PERSONAL cannot both be set.")
-    if organization:
-        cmd.extend(["--organization", organization])
-    elif personal:
-        cmd.append("--personal")
+    cmd.extend(team_arguments("OO_NANO_BANANA", "OO_IMAGE"))
 
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=900)
@@ -139,6 +125,7 @@ def _run_oo_connector(action: str, payload: dict[str, Any], *, service: str) -> 
 
 def _run_oo_file_upload(path: str) -> str:
     cmd = ["oo", "file", "upload", path, "--json"]
+    cmd.extend(team_arguments("OO_NANO_BANANA", "OO_IMAGE"))
     try:
         proc = subprocess.run(cmd, check=False, text=True, capture_output=True, timeout=300)
     except FileNotFoundError as exc:
