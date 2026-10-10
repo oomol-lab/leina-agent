@@ -336,12 +336,12 @@ class OONanoBananaImageGenProvider(ImageGenProvider):
         resolution_field = actions.get("resolution_field")
         if resolution_field:
             request[resolution_field] = resolution
-        if refs:
-            request[actions["image_urls_field"]] = [
-                _normalize_reference(ref) for ref in refs
-            ]
-
         try:
+            if refs:
+                request[actions["image_urls_field"]] = [
+                    _normalize_reference(ref) for ref in refs
+                ]
+
             submit_payload = _run_oo_connector(actions["submit"], request, service=service)
             session_id = _extract_session_id(submit_payload)
             result_payload = _poll_result(session_id, action=actions["result"], service=service)

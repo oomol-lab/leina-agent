@@ -304,13 +304,13 @@ class OOGPTImage2Provider(ImageGenProvider):
         action_submit = _TEXT_SUBMIT_ACTION
         action_result = _TEXT_RESULT_ACTION
         modality = "text"
-        if refs:
-            action_submit = _EDIT_SUBMIT_ACTION
-            action_result = _EDIT_RESULT_ACTION
-            modality = "image"
-            request["images"] = [{"image_url": _normalize_reference(ref)} for ref in refs]
-
         try:
+            if refs:
+                action_submit = _EDIT_SUBMIT_ACTION
+                action_result = _EDIT_RESULT_ACTION
+                modality = "image"
+                request["images"] = [{"image_url": _normalize_reference(ref)} for ref in refs]
+
             submit_payload = _run_oo_connector(action_submit, request, service=service)
             session_id = _extract_session_id(submit_payload)
             result_payload = _poll_result(session_id, action=action_result, service=service)

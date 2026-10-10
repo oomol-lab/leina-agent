@@ -13,6 +13,49 @@ from pathlib import Path
 from unittest.mock import patch
 
 
+def verify_reference_errors(provider, module, prefix: str, workspace: Path) -> None:
+    """Reference upload failures must return errors without submitting a task."""
+    reference = workspace / "reference.png"
+    reference.write_bytes(b"reference-placeholder")
+    for inputs in (
+        {"image_url": str(reference)},
+        {"reference_image_urls": [str(reference)]},
+    ):
+        for suffix, value in (("ORGANIZATION", "legacy-team"), ("PERSONAL", "true")):
+            with (
+                patch.dict(os.environ, {f"{prefix}_{suffix}": value}),
+                patch.object(module, "require_oo_authentication", return_value=None),
+                patch.object(module.subprocess, "run") as run,
+                patch.object(module, "_run_oo_connector") as submit,
+            ):
+                response = provider.generate("reference error smoke", **inputs)
+                assert response["success"] is False
+                assert response["error_type"] == "RuntimeError"
+                assert f"{prefix}_{suffix}" in response["error"]
+                run.assert_not_called()
+                submit.assert_not_called()
+
+        for failure in (
+            subprocess.CompletedProcess([], 1, "private-placeholder", "signed-url-placeholder"),
+            subprocess.TimeoutExpired(["oo", "file", "upload"], 300),
+        ):
+            with (
+                patch.object(module, "require_oo_authentication", return_value=None),
+                patch.object(module.subprocess, "run") as run,
+                patch.object(module, "_run_oo_connector") as submit,
+            ):
+                if isinstance(failure, subprocess.TimeoutExpired):
+                    run.side_effect = failure
+                else:
+                    run.return_value = failure
+                response = provider.generate("reference error smoke", **inputs)
+                assert response["success"] is False
+                assert response["error_type"] == "RuntimeError"
+                assert "private-placeholder" not in response["error"]
+                assert "signed-url-placeholder" not in response["error"]
+                submit.assert_not_called()
+
+
 def main() -> None:
     root = Path("/opt/hermes")
     stamp = json.loads((root / "install-stamp.json").read_text())
@@ -68,10 +111,10 @@ def main() -> None:
 
         # Exercise the actual CLI adapters without issuing hosted actions.
         import importlib
-        for module_name, prefix in (
-            ("plugins.image_gen.oo_gpt_image_2", "OO_GPT_IMAGE_2"),
-            ("plugins.image_gen.oo_nano_banana", "OO_NANO_BANANA"),
-            ("plugins.video_gen.oo_seedance", "OO_SEEDANCE"),
+        for module_name, prefix, lookup in (
+            ("plugins.image_gen.oo_gpt_image_2", "OO_GPT_IMAGE_2", image_provider),
+            ("plugins.image_gen.oo_nano_banana", "OO_NANO_BANANA", image_provider),
+            ("plugins.video_gen.oo_seedance", "OO_SEEDANCE", video_provider),
         ):
             module = importlib.import_module(module_name)
             os.environ[f"{prefix}_TEAM"] = "Smoke Team"
@@ -94,8 +137,11 @@ def main() -> None:
                     assert "signed-placeholder" not in str(exc)
                 else:
                     raise AssertionError("failed CLI action was accepted")
+            registered = lookup(module.PROVIDER_NAME)
+            implementation = sys.modules[type(registered).__module__]
+            verify_reference_errors(registered, implementation, prefix, Path(home))
             del os.environ[f"{prefix}_TEAM"]
-        print("Hermes runtime: identity, Skill limits and five providers verified")
+        print("Hermes runtime: identity, Skill limits, five providers and reference errors verified")
 
 
 if __name__ == "__main__":

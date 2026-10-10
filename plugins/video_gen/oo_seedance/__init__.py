@@ -332,29 +332,29 @@ class OOSeedanceVideoGenProvider(VideoGenProvider):
                 aspect_ratio=ratio,
             )
 
-        refs: list[dict[str, str]] = []
-        if isinstance(image_url, str) and image_url.strip():
-            refs.append({"url": _normalize_reference(image_url), "role": "first_frame"})
-        for ref in reference_image_urls or []:
-            if isinstance(ref, str) and ref.strip():
-                refs.append({"url": _normalize_reference(ref), "role": "reference_image"})
-        refs = refs[:9]
-
-        request: dict[str, Any] = {
-            "model": resolved_model,
-            "prompt": prompt,
-            "images": refs,
-            "returnLastFrame": return_last_frame,
-            "generateAudio": generate_audio,
-            "resolution": resolved_resolution,
-            "ratio": ratio,
-            "duration": resolved_duration,
-            "watermark": watermark,
-        }
-        if seed is not None:
-            request["seed"] = int(seed)
-
         try:
+            refs: list[dict[str, str]] = []
+            if isinstance(image_url, str) and image_url.strip():
+                refs.append({"url": _normalize_reference(image_url), "role": "first_frame"})
+            for ref in reference_image_urls or []:
+                if isinstance(ref, str) and ref.strip():
+                    refs.append({"url": _normalize_reference(ref), "role": "reference_image"})
+            refs = refs[:9]
+
+            request: dict[str, Any] = {
+                "model": resolved_model,
+                "prompt": prompt,
+                "images": refs,
+                "returnLastFrame": return_last_frame,
+                "generateAudio": generate_audio,
+                "resolution": resolved_resolution,
+                "ratio": ratio,
+                "duration": resolved_duration,
+                "watermark": watermark,
+            }
+            if seed is not None:
+                request["seed"] = int(seed)
+
             submit_payload = _run_oo_connector(_SUBMIT_ACTION, request, service=service)
             session_id = _extract_session_id(submit_payload)
             result_payload = _poll_result(session_id, service=service)
