@@ -1,5 +1,5 @@
 services:
   hermes:
-    image: oomol-hermes-agent:dev
+    image: leina-agent:dev
     build:
       context: .

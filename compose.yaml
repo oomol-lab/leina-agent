@@ -1,8 +1,9 @@
+# Keep the original project name so upgrades reuse existing containers and data.
 name: oomol-hermes-agent
 
 services:
   hermes:
-    image: ${HERMES_IMAGE:-ghcr.io/oomol-lab/oomol-hermes-agent:latest}
+    image: ${HERMES_IMAGE:-ghcr.io/oomol-lab/leina-agent:latest}
     restart: unless-stopped
     init: true
     environment:

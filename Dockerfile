@@ -29,11 +29,11 @@ ARG OO_CLI_SHA256_ARM64=00611657644ab56663f2bdf0e83e2c45986e0a0f76590dbff3492e8c
 ARG TARGETARCH
 ARG IMAGE_VERSION=dev
 ARG IMAGE_REVISION=unknown
-ARG IMAGE_SOURCE=https://github.com/oomol-lab/oomol-hermes-agent
+ARG IMAGE_SOURCE=https://github.com/oomol-lab/leina-agent
 ARG IMAGE_CREATED=unknown
 
-LABEL org.opencontainers.image.title="OOMOL Hermes Agent" \
-      org.opencontainers.image.description="Hermes Agent Docker distribution with OO CLI, curated Skills, and OOMOL providers" \
+LABEL org.opencontainers.image.title="Leina Agent" \
+      org.opencontainers.image.description="Leina Agent: self-hosted AI agent powered by Hermes, with OO CLI, curated Skills, and OOMOL providers" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
       org.opencontainers.image.source="${IMAGE_SOURCE}" \

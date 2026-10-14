@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the OOMOL Hermes bundled-skill tree from an explicit allowlist."""
+"""Build the Leina Agent bundled-skill tree from an explicit allowlist."""
 
 from __future__ import annotations
 
@@ -183,7 +183,7 @@ def main() -> int:
         )
     except (OSError, ValueError) as error:
         parser.error(str(error))
-    print(f"OOMOL Hermes bundled skills: selected={count}")
+    print(f"Leina Agent bundled skills: selected={count}")
     return 0
 
 

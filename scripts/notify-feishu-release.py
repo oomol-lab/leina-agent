@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Send a Hermes Agent release notification through a Feishu custom bot."""
+"""Send a Leina Agent release notification through a Feishu custom bot."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> None:
     summary = os.getenv("RELEASE_SUMMARY", "").strip()
 
     message_lines = [
-        f"Hermes Agent {release_tag} 已发布",
+        f"Leina Agent {release_tag} 已发布",
         "",
         f"镜像：{release_image}",
         f"Release：{server_url}/{repository}/releases/tag/{release_tag}",

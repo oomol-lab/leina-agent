@@ -5,7 +5,7 @@ description: Create, edit, convert, and inspect Microsoft Office files.
 
 # Office Files
 
-Use the OOMOL Hermes Agent image-provided Office stack. Do not install replacement document
+Use the Leina Agent image-provided Office stack. Do not install replacement document
 libraries at runtime before trying the supported tools below.
 
 ## Default tools

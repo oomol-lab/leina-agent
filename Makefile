@@ -1,6 +1,7 @@
 SHELL := /bin/sh
 
-IMAGE ?= oomol-hermes-agent:dev
+IMAGE ?= leina-agent:dev
+# Retain the existing volume name so upgrades reuse user data.
 DATA_VOLUME ?= oomol-hermes-agent-data
 DOCKER ?= docker
 COMMAND ?=
@@ -13,7 +14,7 @@ RUNTIME_ENV := -e OO_API_KEY -e OO_LLM_BASE_URL -e OO_LLM_MODEL -e OO_LLM_API_MO
 .PHONY: help test check build smoke integration volume run run-clean gateway compose-config compose-build compose-up compose-down compose-reset compose-logs compose-cli
 
 help:
-	@echo "OOMOL Hermes Agent development commands:"
+	@echo "Leina Agent development commands:"
 	@echo "  make test         Run repository tests inside Docker"
 	@echo "  make check        Run tests and whitespace checks"
 	@echo "  make build        Build the local Docker image"

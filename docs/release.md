@@ -1,9 +1,8 @@
 # Release Process
 
-The public release pipeline follows the immutable date-tag model used by the
-OOMOL Hermes Agent project, adapted for this standalone distribution. It
-publishes only to GitHub Container Registry; it has no Alibaba Cloud registry
-dependency.
+Leina Agent releases use immutable date tags and publish multi-platform Docker
+images to GitHub Container Registry (GHCR). Each release records the pinned
+Hermes and OO CLI versions and includes build provenance and an SBOM.
 
 ## Release Identity
 
@@ -17,7 +16,7 @@ the annotated tag metadata and the lock file at the tagged commit disagree.
 
 ## Automated Release
 
-Run the `Hermes Agent image` workflow from the repository's default branch.
+Run the `Leina Agent image` workflow from the repository's default branch.
 The workflow:
 
 1. Creates and pushes the next annotated release tag.
@@ -25,7 +24,7 @@ The workflow:
 3. Builds `linux/amd64` and `linux/arm64` images with Buildx.
 4. Publishes the release tag, full source SHA tag, and `latest` to the GHCR
    package matching `github.repository` (currently
-   `ghcr.io/oomol-lab/oomol-hermes-agent`).
+   `ghcr.io/oomol-lab/leina-agent`).
 5. Verifies that all published tags resolve to the same registry digest.
 6. Publishes a GitHub Release with the commit list, optional AI-generated
    summary, and build metadata.
@@ -33,6 +32,12 @@ The workflow:
    generated summary when available.
 
 The image build emits a maximal provenance attestation and an SBOM.
+
+After the repository rename, new releases publish to
+`ghcr.io/oomol-lab/leina-agent`. Renaming a GitHub repository does not move an
+existing GHCR package. Publish and verify the first image at the new address
+before relying on the updated Compose default. Existing installations can keep
+using their previously published image by setting `HERMES_IMAGE` in `.env`.
 
 ## Retry An Existing Release
 
@@ -76,7 +81,7 @@ Validate an already-created release without building or pushing an image:
 ```sh
 RELEASE_TAG=v2026.08.17-1 \
 RELEASE_COMMIT_SHA="$(git rev-list -n 1 v2026.08.17-1^{commit})" \
-IMAGE_REPOSITORY=ghcr.io/oomol-lab/oomol-hermes-agent \
+IMAGE_REPOSITORY=ghcr.io/oomol-lab/leina-agent \
 DRY_RUN=1 \
 scripts/release.sh
 ```

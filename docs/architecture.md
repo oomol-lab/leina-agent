@@ -2,8 +2,9 @@
 
 ## Purpose
 
-OOMOL Hermes Agent is a Docker distribution assembly project, not a fork that
-develops an independent agent core.
+Leina Agent is a self-hosted AI agent distribution powered by Hermes Agent,
+with OO CLI, curated Skills, and OOMOL provider Plugins bundled in Docker. This
+repository assembles that runtime; Hermes supplies the agent core.
 
 ```text
 Pinned Hermes source
@@ -55,7 +56,9 @@ runtime. Hermes lives at `/opt/hermes`, distribution assets live at
 `/opt/pm-runtime` and the upstream payload manifest at `/opt/manifest.json`.
 The independent document environment
 lives at `/opt/oomol-hermes-agent/document-venv`; it does not replace dependencies
-in the Hermes lock. Both interpreters remain executable after the container
+in the Hermes lock. The `/opt/oomol-hermes-agent` directory retains its
+original name for compatibility with bundled scripts and existing user Skills.
+Both interpreters remain executable after the container
 switches to the non-root `hermes` user. The Debian base is pinned by
 multi-platform digest and SQLite 3.53.4 is built from a SHA-256-verified source.
 

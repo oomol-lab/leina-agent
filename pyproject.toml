@@ -1,7 +1,7 @@
 [project]
 name = "oomol-hermes-agent-build"
 version = "0.1.0"
-description = "Build and validation tooling for OOMOL Hermes Agent."
+description = "Build and validation tooling for Leina Agent."
 requires-python = ">=3.11,<3.14"
 dependencies = [
   "PyYAML==6.0.3",

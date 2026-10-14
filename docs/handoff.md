@@ -3,9 +3,20 @@
 ## Goal
 
 Publish a standalone open-source Docker distribution named
-`oomol-hermes-agent`. It should offer a normal Hermes experience with OO CLI,
-curated Skills, and OOMOL provider Plugins preinstalled, without depending on
+Leina Agent (`leina-agent`). It should offer a normal Hermes experience with
+OO CLI, curated Skills, and OOMOL provider Plugins preinstalled, without depending on
 the private OOMOL production control plane.
+
+## Project Naming (2026-10-14)
+
+The public project is Leina Agent, hosted at `oomol-lab/leina-agent`. Hermes
+Agent remains the upstream runtime; OO CLI and OOMOL remain the service and
+provider names. New image releases target `ghcr.io/oomol-lab/leina-agent`.
+
+The image asset directory `/opt/oomol-hermes-agent`, Python module
+`oomol_hermes_oo`, Compose project name `oomol-hermes-agent`, and Make data
+volume `oomol-hermes-agent-data` retain their existing identifiers for runtime
+and data compatibility. These identifiers do not define the public brand.
 
 ## Completed In The Initial Scaffold
 
@@ -144,9 +155,9 @@ full-SHA Action pins, and the two-architecture acceptance matrix were checked
 in Docker; GitHub workflows were not dispatched and no image was published.
 
 The pre-upgrade `39237f5` baseline has successful GitHub repository tests
-([CI run](https://github.com/oomol-lab/oomol-hermes-agent/actions/runs/32211377306))
+([CI run](https://github.com/oomol-lab/leina-agent/actions/runs/32211377306))
 and a successful linux/amd64 image build
-([image run](https://github.com/oomol-lab/oomol-hermes-agent/actions/runs/32211377290)).
+([image run](https://github.com/oomol-lab/leina-agent/actions/runs/32211377290)).
 Those results do not validate this new dependency combination.
 
 1. Verify live authenticated Connector actions and model calls in a runtime
@@ -160,7 +171,7 @@ Those results do not validate this new dependency combination.
    defaults after the first release.
 6. Confirm and document OO CLI redistribution/license terms.
 7. Run the initial release workflow, verify its SBOM and provenance
-   attestations, and publish `ghcr.io/oomol-lab/oomol-hermes-agent`.
+   attestations, and publish `ghcr.io/oomol-lab/leina-agent`.
 
 ## Known Design Debt
 
