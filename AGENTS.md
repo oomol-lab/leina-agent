@@ -1,6 +1,6 @@
-# OOMOL Hermes Agent Development Guide
+# Leina Agent Development Guide
 
-This repository builds the standalone open-source OOMOL Hermes Agent Docker
+This repository builds the standalone open-source Leina Agent Docker
 distribution from a pinned NousResearch Hermes Agent revision. These rules are
 mandatory.
 

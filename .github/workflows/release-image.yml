@@ -1,4 +1,4 @@
-name: Hermes Agent image
+name: Leina Agent image
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: oomol-hermes-agent-image-${{ (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')) && 'release' || github.ref }}
+  group: leina-agent-image-${{ (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')) && 'release' || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
 
 jobs:
@@ -53,17 +53,17 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           load: true
-          tags: oomol-hermes-agent:test
+          tags: leina-agent:test
           provenance: false
-          cache-from: type=gha,scope=oomol-hermes-agent-${{ matrix.arch }}
-          cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=oomol-hermes-agent-{0}', matrix.arch) || '' }}
+          cache-from: type=gha,scope=leina-agent-${{ matrix.arch }}
+          cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=leina-agent-{0}', matrix.arch) || '' }}
           build-args: |
             IMAGE_VERSION=${{ github.sha }}
             IMAGE_REVISION=${{ github.sha }}
             IMAGE_SOURCE=https://github.com/${{ github.repository }}
 
       - name: Verify non-root runtime and document artifacts offline
-        run: make integration IMAGE=oomol-hermes-agent:test
+        run: make integration IMAGE=leina-agent:test
 
   prepare-release:
     name: Prepare immutable release tag
@@ -122,8 +122,8 @@ jobs:
       RELEASE_TAG: ${{ needs.prepare-release.outputs.release_tag }}
       RELEASE_COMMIT_SHA: ${{ needs.prepare-release.outputs.source_commit }}
       PUBLISH_LATEST: "1"
-      DOCKER_CACHE_FROM: type=gha,scope=oomol-hermes-agent-release
-      DOCKER_CACHE_TO: type=gha,mode=max,scope=oomol-hermes-agent-release
+      DOCKER_CACHE_FROM: type=gha,scope=leina-agent-release
+      DOCKER_CACHE_TO: type=gha,mode=max,scope=leina-agent-release
     steps:
       - name: Checkout prepared release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -161,7 +161,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OOMOL_RELEASE_SUMMARY_API_KEY: ${{ secrets.OOMOL_RELEASE_SUMMARY_API_KEY }}
           OOMOL_RELEASE_SUMMARY_MODEL: deepseek-v4-flash
-          RELEASE_SUMMARY_FILE: ${{ runner.temp }}/hermes-agent-release-summary.md
+          RELEASE_SUMMARY_FILE: ${{ runner.temp }}/leina-agent-release-summary.md
         run: |
           notes_file="$(mktemp)"
           trap 'rm -f "$notes_file"' EXIT

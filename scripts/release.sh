@@ -5,7 +5,7 @@ repo_root="${REPO_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}"
 release_tag="${RELEASE_TAG:-${GITHUB_REF_NAME:-}}"
 commit_sha="${RELEASE_COMMIT_SHA:-${GITHUB_SHA:-}}"
 image_repository="${IMAGE_REPOSITORY:-}"
-image_source="${IMAGE_SOURCE:-https://github.com/oomol-lab/oomol-hermes-agent}"
+image_source="${IMAGE_SOURCE:-https://github.com/oomol-lab/leina-agent}"
 platforms="${RELEASE_PLATFORMS:-linux/amd64,linux/arm64}"
 dry_run="${DRY_RUN:-0}"
 publish_latest="${PUBLISH_LATEST:-1}"
@@ -174,7 +174,7 @@ esac
 
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     {
-        printf '## OOMOL Hermes Agent image release\n\n'
+        printf '## Leina Agent image release\n\n'
         printf '| Field | Value |\n| --- | --- |\n'
         printf "| Image version | \`%s\` |\n" "$release_tag"
         printf "| Source commit | \`%s\` |\n" "$commit_sha"

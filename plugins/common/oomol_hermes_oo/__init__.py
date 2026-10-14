@@ -1,4 +1,4 @@
-"""Shared OO CLI behavior for bundled OOMOL Hermes providers."""
+"""Shared OO CLI behavior for bundled Leina Agent providers."""
 
 from .auth import OOLoginRequired, require_oo_authentication
 from .identity import team_arguments

@@ -1,4 +1,4 @@
-# OOMOL Hermes Agent 依赖升级报告
+# Leina Agent 依赖升级报告
 
 核对日期：2026 年 10 月 10 日。项目基线：`39237f5`。
 

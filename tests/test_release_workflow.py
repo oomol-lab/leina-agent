@@ -110,7 +110,7 @@ def test_release_dry_run_rejects_metadata_drift(tmp_path: Path) -> None:
         "REPO_ROOT": str(repository),
         "RELEASE_TAG": "v2026.08.17-1",
         "RELEASE_COMMIT_SHA": commit,
-        "IMAGE_REPOSITORY": "ghcr.io/oomol-lab/oomol-hermes-agent",
+        "IMAGE_REPOSITORY": "ghcr.io/oomol-lab/leina-agent",
         "DRY_RUN": "1",
     }
     result = _run("scripts/release.sh", cwd=repository, env=release_env)

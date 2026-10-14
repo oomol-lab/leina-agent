@@ -2,7 +2,7 @@
 # Run image acceptance without credentials, remote inference or persistent data.
 set -eu
 
-image="${1:-oomol-hermes-agent:dev}"
+image="${1:-leina-agent:dev}"
 docker_cli="${DOCKER:-docker}"
 
 if "$docker_cli" run --rm --network none "$image" true >/dev/null 2>&1; then

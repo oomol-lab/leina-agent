@@ -1,17 +1,17 @@
-# OOMOL Hermes Agent 发布摘要背景
+# Leina Agent 发布摘要背景
 
 ## 产品与读者
 
-OOMOL Hermes Agent 是一个开源 Docker 分发项目，将固定版本的 NousResearch Hermes Agent、OO CLI、精选 Skills 和 provider Plugins 组装为可独立部署的运行时镜像。
+Leina Agent 是一个开源 Docker 分发项目，将固定版本的 NousResearch Hermes Agent、OO CLI、精选 Skills 和 provider Plugins 组装为可独立部署的运行时镜像。
 
-发布摘要面向部署或维护该镜像的用户，而不是仅面向仓库贡献者。
+发布摘要面向部署或维护 Leina Agent 的用户。项目名称统一使用 Leina Agent；Hermes Agent 指上游运行时，OOMOL 和 OO CLI 指服务与工具。仓库为 `oomol-lab/leina-agent`。
 
 ## 术语和组件
 
 - `upstream.lock.json`：Hermes 与 OO CLI 的权威版本和校验记录。
 - `scripts/`：镜像装配、启动、验证和发布相关脚本。
 - Skills 和 OO CLI：Agent 调用工具或托管工作流的能力；只有明确改变可用能力、兼容性或体验时才在摘要中说明。
-- Providers：通过 Hermes provider 扩展点接入模型或文档能力的分发层组件。
+- Providers：通过 Hermes provider 扩展点接入语言模型、图片生成、视频生成和网页搜索的发行版组件。
 
 ## 摘要准则
 

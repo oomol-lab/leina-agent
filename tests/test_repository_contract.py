@@ -110,9 +110,13 @@ def test_description_patch_is_fail_closed() -> None:
 def test_public_compose_uses_published_image_and_persistent_data() -> None:
     compose = yaml.safe_load((ROOT / "compose.yaml").read_text())
     service = compose["services"]["hermes"]
+    assert compose["name"] == "oomol-hermes-agent"
     assert service["image"].startswith(
-        "${HERMES_IMAGE:-ghcr.io/oomol-lab/oomol-hermes-agent:"
+        "${HERMES_IMAGE:-ghcr.io/oomol-lab/leina-agent:"
     )
+    env_example = (ROOT / ".env.example").read_text()
+    default_image = service["image"].removeprefix("${HERMES_IMAGE:-").removesuffix("}")
+    assert f"HERMES_IMAGE={default_image}\n" in env_example
     assert "build" not in service
     assert service["command"] == ["hermes", "gateway", "run"]
     assert "hermes-data:/data" in service["volumes"]
@@ -187,7 +191,7 @@ def test_development_compose_builds_the_local_image() -> None:
     compose = yaml.safe_load((ROOT / "compose.dev.yaml").read_text())
     assert set(compose["services"]) == {"hermes"}
     service = compose["services"]["hermes"]
-    assert service["image"] == "oomol-hermes-agent:dev"
+    assert service["image"] == "leina-agent:dev"
     assert service["build"]["context"] == "."
     assert "healthcheck" not in service
 

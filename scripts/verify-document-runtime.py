@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the OOMOL Hermes Agent Office and PDF runtime contract."""
+"""Verify the Leina Agent Office and PDF runtime contract."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def verify_office(workspace: Path) -> None:
 
     docx_path = workspace / "office-smoke.docx"
     document = Document()
-    document.add_heading("OOMOL 文档验证", level=1)
+    document.add_heading("Leina Agent 文档验证", level=1)
     document.add_paragraph("Office runtime ready")
     document.save(docx_path)
     reopened = Document(docx_path)
@@ -74,17 +74,17 @@ def verify_office(workspace: Path) -> None:
 
     xlsx_path = workspace / "office-smoke.xlsx"
     workbook = Workbook()
-    workbook.active["A1"] = "OOMOL Excel 验证"
+    workbook.active["A1"] = "Leina Agent Excel 验证"
     workbook.save(xlsx_path)
-    assert load_workbook(xlsx_path).active["A1"].value == "OOMOL Excel 验证"
+    assert load_workbook(xlsx_path).active["A1"].value == "Leina Agent Excel 验证"
 
     pptx_path = workspace / "office-smoke.pptx"
     presentation = Presentation()
     slide = presentation.slides.add_slide(presentation.slide_layouts[1])
-    slide.shapes.title.text = "OOMOL PowerPoint 验证"
+    slide.shapes.title.text = "Leina Agent PowerPoint 验证"
     slide.placeholders[1].text = "Basic PPTX runtime ready"
     presentation.save(pptx_path)
-    assert Presentation(pptx_path).slides[0].shapes.title.text == "OOMOL PowerPoint 验证"
+    assert Presentation(pptx_path).slides[0].shapes.title.text == "Leina Agent PowerPoint 验证"
 
     markdown_path = workspace / "office-smoke.md"
     markdown_path.write_text("# Pandoc smoke\n", encoding="utf-8")
@@ -136,7 +136,7 @@ def verify_pdf(workspace: Path) -> None:
         json.dumps(
             {
                 "output": str(blank_pdf),
-                "title": "OOMOL PDF 表单验证",
+                "title": "Leina Agent PDF 表单验证",
                 "field_rows": [
                     [{"name": "contact", "label": "联系人"}],
                     [
@@ -214,7 +214,7 @@ def main() -> int:
         verify_office(workspace)
         verify_pdf(workspace)
 
-    print("OOMOL document runtime: verified")
+    print("Leina Agent document runtime: verified")
     return 0
 
 

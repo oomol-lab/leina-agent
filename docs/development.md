@@ -28,7 +28,7 @@ docker build --progress=plain \
 ## Image Build
 
 ```sh
-docker build --progress=plain -t oomol-hermes-agent:dev .
+docker build --progress=plain -t leina-agent:dev .
 ```
 
 The build requires internet access to the pinned Hermes repository, OO CLI
@@ -38,11 +38,11 @@ Smoke commands:
 
 ```sh
 docker run --rm -e OO_API_KEY -e OO_LLM_BASE_URL -e OO_LLM_MODEL -e OO_LLM_API_MODE \
-  oomol-hermes-agent:dev oo --version
+  leina-agent:dev oo --version
 docker run --rm -e OO_API_KEY -e OO_LLM_BASE_URL -e OO_LLM_MODEL -e OO_LLM_API_MODE \
-  oomol-hermes-agent:dev hermes --help
+  leina-agent:dev hermes --help
 docker run --rm -e OO_API_KEY -e OO_LLM_BASE_URL -e OO_LLM_MODEL -e OO_LLM_API_MODE \
-  oomol-hermes-agent:dev hermes plugins list --plain
+  leina-agent:dev hermes plugins list --plain
 ```
 
 Export all four variables before running image commands. `.env.example`
